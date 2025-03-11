@@ -1,0 +1,33 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(rvest)
+library(flextable)
+library(officer)
+
+source('LossSummary.R')
+WRloss <- cumulative_loss %>% filter(species == 'Winter-run') %>%
+  summarize(maxloss = max(cumul_loss)) %>% pull()
+partial <- temp %>% filter(confirmed == 'PARTIAL') %>%
+  summarize(sum(loss)) %>% pull()
+SHloss <- cumulative_loss %>% filter(species == 'Steelhead') %>%
+  summarize(maxloss = max(cumul_loss)) %>% pull()
+WRtriggers <- sum(wr_weekly$triggered == "Yes")
+SHtriggers <- sum(SH_weekly$triggered == "Yes")
+```
+
+Hi all,
+
+Please see summary of most recent loss estimates at salvage facilities. Total annual loss of natural Winter-run Chinook Salmon as of `r format(Sys.Date() - 1, "%B %d, %Y")` is **`r WRloss - partial`** and loss of unconfirmed Winter-run Chinook Salmon is **`r partial`**. Total annual loss of CCV steelhead as of `r format(Sys.Date() - 1, "%B %d, %Y")` is **`r SHloss`**.  There have been **`r WRtriggers`** triggers of the Winter-run and **`r SHtriggers`** triggers of the steelhead distributed weekly loss thresholds in the past week (see table).
+
+`r weekly_table`
+<div style="text-align: center;">
+```{r, fig.width=8, fig.height=5, fig.align='center', echo = FALSE}
+loss_graph
+
+
+
