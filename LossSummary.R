@@ -69,7 +69,19 @@ wr_weekly_WY <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date(Sys.Date())
   mutate(threshold = round(threshold, 2)) %>%
   mutate(sum_7D_loss = rollsum(loss, k = 7, fill = NA, align = 'right')) %>%
   mutate(triggered = if_else(sum_7D_loss < threshold, 'No', 'Yes')) %>%
-  mutate(loss = if_else(confirmed == 'PARTIAL', paste0(as.character(loss), '*'), as.character(loss)))
+  mutate(loss = if_else(confirmed == 'PARTIAL', paste0(as.character(loss), '*'), as.character(loss))) 
+
+# Extend the threshold column for one week beyond Sys.Date()
+threshold_extension <- data.frame(Date = seq(as.Date(Sys.Date()) + 1, as.Date(Sys.Date()) + 14, 1)) %>%
+  left_join(wr_thresholds, by = 'Date') %>%
+  mutate(threshold = round(threshold, 2))
+
+# Combine the two data frames
+wr_weekly_WY <- bind_rows(wr_weekly_WY %>% filter(Date <= Sys.Date()), threshold_extension) %>%
+  arrange(Date) %>%
+  group_by(Date) %>%
+  mutate(threshold = if_else(is.na(threshold), lag(threshold, order_by = Date), threshold)) %>%
+  ungroup()
 
 ############steelhead weekly threshold
 salvage <- steelhead_raw %>% select(1,3,9) %>%
@@ -199,7 +211,7 @@ loss_graph <- ggplot(cumulative_loss) +
   #geom_col(aes(x = Date, y = loss, fill = facility), position = 'dodge') +
   geom_label(lossmax, mapping = aes(x = Date + 1, y = cumul_loss, 
                                    label = paste0(cumul_loss, ' (', threshold, '%)')), 
-            fontface = 'bold', size = 4) +
+            fontface = 'bold', size = 4, nudge_x = -10) +
   geom_text(data = thresholds, aes(x = min(cumulative_loss$Date) - 15, 
                                    y = max_loss * .90, 
                                    label = label), 
@@ -212,7 +224,7 @@ loss_graph <- ggplot(cumulative_loss) +
   geom_col(aes(x = Date, y = loss, fill = facility), position = 'dodge') +
   facet_wrap(~species, scales = 'free_y') +
   scale_color_manual(name = "", values = c('#999999', 'blue', 'red')) +  # Adjust colors as needed
-  scale_x_date(date_breaks = '6 weeks', date_labels = "%b %d", limits = c(as.Date('2024-12-01'), Sys.Date() + 14)) +
+  scale_x_date(date_breaks = '2 weeks', date_labels = "%b %d", limits = c(as.Date('2024-12-01'), Sys.Date() + 14)) +
   guides(color = guide_legend(override.aes = list(linetype = c('solid', 'dashed', 'dotted')))) +
   scale_fill_manual(values = c('#0066cc', 'orange3')) +
   labs(y = 'Loss', fill = 'Facility', x = NULL) +
@@ -221,7 +233,7 @@ loss_graph <- ggplot(cumulative_loss) +
         axis.title.y = element_text(margin = margin(r = 15), size = 15),
         axis.title.x = element_text(margin = margin(t = 15), size = 15),
         strip.text = element_text(size = 13),
-        axis.text.x = element_text(size = 13),
+        axis.text.x = element_text(size = 13, angle = 45, hjust = 1),  # Adjust angle
         axis.text.y = element_text(size = 13),
         legend.position = 'bottom')
 

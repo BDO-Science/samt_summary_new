@@ -23,7 +23,7 @@ outlook_app <- COMCreate("Outlook.Application")
 email <- outlook_app$CreateItem(0)  # 0 corresponds to olMailItem
 
 # Set email properties
-email[["To"]] <- c("jaisrael@usbr.gov", "cehlo@usbr.gov", "avaisvil@usbr.gov", "lejohnson@usbr.gov", "lejohnson@usbr.gov", "mmanzo@usbr.gov", "dmmooney@usbr.gov", "twashburn@usbr.gov")  # Change to the recipient's email address
+email[["To"]] <- "jaisrael@usbr.gov; cehlo@usbr.gov; avaisvil@usbr.gov; lejohnson@usbr.gov; lejohnson@usbr.gov; mmanzo@usbr.gov; dmmooney@usbr.gov; twashburn@usbr.gov"  # Change to the recipient's email address
 email[["Subject"]] <- paste0("Salmonid Loss as of ", format(Sys.Date(), "%B %d, %Y"))
 
 img_path <- file.path(tempdir(), "Loss_Table.png")
@@ -56,7 +56,7 @@ email_body <- paste0(
   " is <strong>", SHloss, "</strong>.</p>",
   "<p>There have been <strong>", WRtriggers, "</strong> triggers of the Winter-run and <strong>", SHtriggers, "</strong> triggers of the steelhead distributed weekly loss thresholds in the past week.</p>",
   "<p><img src='", img_base64, "' alt='Loss Graph' style='width: 100%; max-width: 800px;'/></p>",
-  "<p>Best regards,<br>Your Name</p>"  # Change to your name
+  "<p>Best regards,<br>SaMT Team</p>" 
 )
 
 # Set the email body as HTML
