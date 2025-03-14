@@ -170,7 +170,10 @@ thresholds <- data.frame(species = c('Steelhead', 'Steelhead', 'Steelhead',
   mutate(label = paste0('Thresholds:\n',perc100, ' (100%)\n',
                         perc75, ' (75%)\n',
                         perc50, ' (50%)')) %>%
-  left_join(select(lossmax, species,cumul_loss), by = 'species')
+  left_join(select(lossmax, species,cumul_loss), by = 'species') %>%
+  mutate(max_thresh = if_else(species == 'Steelhead', 120, max(wr_weekly_WY$threshold))) %>%
+  rowwise() %>%
+  mutate(max_loss = max(cumul_loss, max_thresh))
 
 #annual_thresholds <- expand.grid(threshold_perc = c(.5, .75, 1), species = c('steelhead', 'winter-run')) %>%
 #mutate(threshold = if_else(species == 'steelhead', 3000 * threshold_perc, jpe*.005*threshold_perc))
@@ -192,24 +195,26 @@ combined_weekly <- bind_rows(SH_weekly_WY, wr_weekly_WY)
 hline_data <- data.frame(yintercept = 120, species = "Steelhead")
 
 loss_graph <- ggplot(cumulative_loss) +
-  geom_line(aes(x = Date, y = cumul_loss, color = "Cumulative Loss"), linetype = 'dashed', linewidth = 1) +
-  geom_col(aes(x = Date, y = loss, fill = facility), position = 'dodge') +
-  geom_text(lossmax, mapping = aes(x = Date + 1, y = cumul_loss * 1.05, 
+  geom_line(aes(x = Date, y = cumul_loss, color = "Annual Cumulative Loss"), linetype = 'dashed', linewidth = 1) +
+  #geom_col(aes(x = Date, y = loss, fill = facility), position = 'dodge') +
+  geom_label(lossmax, mapping = aes(x = Date + 1, y = cumul_loss, 
                                    label = paste0(cumul_loss, ' (', threshold, '%)')), 
             fontface = 'bold', size = 4) +
   geom_text(data = thresholds, aes(x = min(cumulative_loss$Date) - 15, 
-                                   y = cumul_loss * .90, 
+                                   y = max_loss * .90, 
                                    label = label), 
-            hjust = 0, fontface = "italic", size = 4) + 
-  geom_line(data = combined_weekly, aes(x = Date, y = sum_7D, color = "7 d Rolling Sum"), alpha = 0.5, size = 1) +  # Add lines for SH and WR data
+           hjust = 0, fontface = "italic", size = 4) + 
+  geom_line(data = combined_weekly, aes(x = Date, y = sum_7D, color = "7 d Rolling Sum"), alpha = 0.9, size = 1) +  # Add lines for SH and WR data
   geom_line(data = combined_weekly, aes(x = Date, y = threshold, color = "Weekly Distributed Loss Threshold"), linetype = "dotted", size = 1) + #winter-run threshold
   # Add a condition to only show the line on the Steelhead facet
   geom_hline(data = hline_data, aes(yintercept = yintercept), 
              color = "red", linetype = "dotted", size = 1) +
+  geom_col(aes(x = Date, y = loss, fill = facility), position = 'dodge') +
   facet_wrap(~species, scales = 'free_y') +
-  scale_color_manual(name = "", values = c('black', 'blue', 'red')) +  # Adjust colors as needed
+  scale_color_manual(name = "", values = c('#999999', 'blue', 'red')) +  # Adjust colors as needed
   scale_x_date(date_breaks = '6 weeks', date_labels = "%b %d", limits = c(as.Date('2024-12-01'), Sys.Date() + 14)) +
   guides(color = guide_legend(override.aes = list(linetype = c('solid', 'dashed', 'dotted')))) +
+  scale_fill_manual(values = c('#0066cc', 'orange3')) +
   labs(y = 'Loss', fill = 'Facility', x = NULL) +
   theme_bw() +
   theme(plot.margin = margin(0.2, 0.5, 0.2, 0.2, unit = 'cm'),
