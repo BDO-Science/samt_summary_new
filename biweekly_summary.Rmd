@@ -13,7 +13,9 @@ source('LossSummary.R')
 WRloss <- cumulative_loss %>% filter(species == 'Winter-run') %>%
   summarize(maxloss = max(cumul_loss)) %>% pull()
 partial <- temp %>% filter(confirmed == 'PARTIAL') %>%
+  group_by(confirmed) %>%
   summarize(sum(loss)) %>% pull()
+partial <- ifelse(length(partial) == 0, 0, partial)
 SHloss <- cumulative_loss %>% filter(species == 'Steelhead') %>%
   summarize(maxloss = max(cumul_loss)) %>% pull()
 WRtriggers <- sum(wr_weekly$triggered == "Yes")
