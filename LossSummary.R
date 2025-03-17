@@ -54,7 +54,19 @@ wr_weekly <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date('2025-06-30'),
   mutate(sum_7D_loss = rollsum(loss, k = 7, fill = NA, align = 'right')) %>%
   filter(Date <= Sys.Date() & Date >= Sys.Date() - 6) %>%
   mutate(triggered = if_else(sum_7D_loss < threshold, 'No', 'Yes')) %>%
-  mutate(loss = if_else(confirmed == 'PARTIAL', paste0(as.character(loss), '*'), as.character(loss)))
+  mutate(loss = if_else(confirmed == 'PARTIAL', paste0(as.character(loss), '*'), as.character(loss))) %>%
+  group_by(Date) %>%
+  summarise(
+    confirmed = paste(unique(confirmed[confirmed != 0]), collapse = ", "),
+    loss = if_else(any(str_detect(loss, "\\*")), 
+                   paste0(sum(as.numeric(str_remove(loss, "\\*")), na.rm = TRUE), "*"), 
+                   as.character(sum(as.numeric(loss), na.rm = TRUE))),
+    HistoricPresent = first(HistoricPresent),
+    threshold = first(threshold),
+    sum_7D_loss = max(sum_7D_loss),
+    triggered = first(triggered)
+  ) %>%
+  ungroup()
 
 wr_table <- wr_weekly %>%
   mutate(Date = format(Date, "%b %d")) %>%
@@ -224,7 +236,7 @@ loss_graph <- ggplot(cumulative_loss) +
   geom_col(aes(x = Date, y = loss, fill = facility), position = 'dodge') +
   facet_wrap(~species, scales = 'free_y') +
   scale_color_manual(name = "", values = c('#999999', 'blue', 'red')) +  # Adjust colors as needed
-  scale_x_date(date_breaks = '2 weeks', date_labels = "%b %d", limits = c(as.Date('2024-12-01'), Sys.Date() + 14)) +
+  scale_x_date(date_breaks = '3 weeks', date_labels = "%b %d", limits = c(as.Date('2024-12-01'), Sys.Date() + 14)) +
   guides(color = guide_legend(override.aes = list(linetype = c('solid', 'dashed', 'dotted')))) +
   scale_fill_manual(values = c('#0066cc', 'orange3')) +
   labs(y = 'Loss', fill = 'Facility', x = NULL) +
