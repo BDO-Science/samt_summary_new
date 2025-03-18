@@ -6,7 +6,7 @@ library(zoo)
 
 wy <- get_fy(Sys.Date(), opt_fy_start = '07-01')  #pull the water year based on BY designation in LTO docs
 jpe <- 98893
-
+jpe_hatch <- 135342
 #set source folder, destination folder, and read in filenames of newest files
 source_folder <- 'SalvageFiles/' #where the current files for the summary script to process live
 file_names <- list.files(path = source_folder, 
@@ -252,5 +252,44 @@ loss_graph <- ggplot(cumulative_loss) +
 # Display the graph
 print(loss_graph)
 
+#####summarizing hatchery winter-run loss
+wr_hatch <- salmon_raw %>%
+  filter(.[[10]] == 'W') %>%
+  mutate(facility = if_else(FACILITY == 2, 'CVP', 'SWP')) %>%
+  select(Date, facility, loss=LOSS) %>%
+  mutate(species = 'Winter-run') %>%
+  mutate(cumul_loss = cumsum(loss))
+
+cumul_max <- max(wr_hatch$cumul_loss)
+max_date <- max(wr_hatch$Date)
+thresholds <- data.frame(threshold = c('100% Threshold', '75% Threshold', '50% Threshold'),
+                         value = c(jpe_hatch*.0012, jpe_hatch*.0012*.75, jpe_hatch*.0012*.5))
+
+wr_hatch_cumul_graph <- ggplot() +
+  geom_col(wr_hatch, mapping = aes(x = Date, y = loss, fill = facility), position = 'dodge') +
+  geom_line(wr_hatch, mapping = aes(x = Date, y = cumul_loss), linewidth = 1, color = 'steelblue3') +
+  geom_hline(thresholds, mapping = aes(yintercept = value), linetype = 'dotted', linewidth = 1, color = 'red') +
+  geom_vline(mapping = aes(xintercept = Sys.Date(), linetype = 'Todays Date', color = 'Todays Date'), linewidth = 1) +
+  geom_text(thresholds, mapping = aes(x = as.Date('2025-03-05'), y = value + 10, label = threshold, fontface = 'bold')) +
+  geom_label(mapping = aes(x = max_date + 1, y = cumul_max *1.1, 
+                           label = paste0(cumul_max, ' (', round((cumul_max/(jpe_hatch*.0012))*100,1), '%)')), 
+             fontface = 'bold', size = 4) +
+  scale_x_date(limits = c(as.Date('2025-03-01'), as.Date('2025-06-01'))) +
+  scale_linetype_manual(name = "", values = c("Todays Date" = "dashed")) +
+  scale_color_manual(name = "", values = c('Todays Date' = 'darkgrey')) +
+  labs(y = 'Cumulative Loss', title = 'WY2025 Cumulative Loss of Hatchery Winter-run') +
+  scale_fill_manual(values = c('#0066cc', 'orange3')) +
+  theme_bw() +
+  theme(plot.margin = margin(0.5, 0.5, 0.1, 0.2, unit = 'cm'),
+        axis.title.y = element_text(margin = margin(r = 15), size = 15),
+        axis.title.x = element_text(margin = margin(t = 10), size = 15),
+        strip.text = element_text(size = 13),
+        axis.text.x = element_text(size = 13, angle = 45, hjust = 1),  # Adjust angle
+        axis.text.y = element_text(size = 13),
+        legend.position = 'bottom',
+        legend.title = element_blank())
+wr_hatch_cumul_graph
+
 ggsave(plot = loss_graph, file = 'outputs/loss_summary.png', width = 9, height = 6)
+ggsave(wr_hatch_cumul_graph, file = 'outputs/hatchery_summary.png', width = 9, height = 6)
 save_as_docx(weekly_table, loss_graph, path = paste0('outputs/salvage-summary_',Sys.Date(),'.docx'))
