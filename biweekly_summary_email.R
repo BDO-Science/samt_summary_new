@@ -30,7 +30,7 @@ img_path <- file.path(tempdir(), "Loss_Table.png")
 raster_img <- flextable::gen_grob(weekly_table)
 
 # Save as PNG
-png(img_path, width = 1200, height = 600)
+png(img_path, width = 1000, height = 1200)
 grid::grid.draw(raster_img)
 dev.off()
 
@@ -39,7 +39,7 @@ email[["Attachments"]]$Add(img_path)
 
 # Save the plot as an image
 img_path <- tempfile(fileext = ".png")
-ggsave(img_path, plot = loss_graph, width = 8, height = 5)
+ggsave(img_path, plot = combined_graph, width = 10, height = 12)
 
 # Read the image and convert to base64
 img_base64 <- base64enc::dataURI(file = img_path, mime = "image/png")
