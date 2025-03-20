@@ -310,7 +310,7 @@ wr_hatch_cumul_graph <- ggplot() +
   scale_x_date(date_breaks = '3 weeks', date_labels = "%b %d", limits = c(as.Date('2025-03-01'), as.Date('2025-06-01'))) +
   scale_linetype_manual(name = "", values = c("Today" = "dashed")) +
   scale_color_manual(name = "", values = c('Today' = 'darkgrey')) +
-  labs(y = 'Loss', subtitle = 'Cumulative Loss of Hatchery Winter-run Chinook Salmon') +
+  labs(y = 'Loss', x = NULL, subtitle = 'Cumulative Loss of Hatchery Winter-run Chinook Salmon') +
   scale_fill_manual(values = c('#0066cc', 'orange3')) +
   theme_bw() +
   theme(plot.margin = margin(0.5, 0.5, 0.1, 0.2, unit = 'cm'),
