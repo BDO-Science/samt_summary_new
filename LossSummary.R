@@ -48,6 +48,37 @@ temp <- salmon_raw %>%
   group_by(Date, confirmed) %>%
   summarize(loss = sum(LOSS), .groups = 'drop')  # Adding .groups = 'drop' to avoid warnings
 
+
+
+# Count occurrences of "W" in Size_Run and NA in DNA_Run and CWT_Run for the entire dataset
+no_wr_salvage <- salmon_raw %>%
+  summarize(
+    DNA_Run_W = sum(DNA_Run == "W", na.rm = TRUE),  # Count "W" in DNA_Run
+    CWT_Run_W = sum(CWT_Run == "W", na.rm = TRUE),   # Count "W" in CWT_Run
+    unconfirmed_W = sum(Size_Run == "W" & is.na(DNA_Run) & is.na(CWT_Run) & AdClip == 'N')  # Count "W" in Size_Run where DNA_Run and CWT_Run are NA
+  )
+
+# Get the last week of data
+last_week_data <- salmon_raw %>%
+  filter(Date >= (Sys.Date() - 7))
+
+# Count occurrences of "W" for the last week
+last_week_summary <- last_week_data %>%
+  summarize(
+    DNA_Run_W = sum(DNA_Run == "W", na.rm = TRUE),  # Count "W" in DNA_Run
+    CWT_Run_W = sum(CWT_Run == "W", na.rm = TRUE),   # Count "W" in CWT_Run
+    unconfirmed_W = sum(Size_Run == "W" & is.na(DNA_Run) & is.na(CWT_Run) & AdClip == 'N')  # Count "W" in Size_Run where DNA_Run and CWT_Run are NA
+  )
+
+# Combine results
+final_summary <- list(
+  overall_summary = no_wr_salvage,
+  last_week_summary = last_week_summary
+)
+
+print(final_summary)
+  
+
 wr_weekly <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date('2025-06-30'), 1)) %>%
   left_join(temp, by = 'Date') %>%
   left_join(wr_thresholds, by = 'Date') %>%
