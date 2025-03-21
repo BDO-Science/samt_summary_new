@@ -32,3 +32,64 @@ graph2
 ```{r, fig.width=8, fig.height=8, fig.align='center', echo = FALSE}
 combined_graph
 ```
+
+### SACPAS TABLES
+
+#### TABLE X. Historic migration and salvage patterns.Last updated `r format(Sys.time(), '%m/%d/%Y')`
+```{r, echo = FALSE}
+
+
+samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
+page <- read_html(samt_url)
+
+tables <- page %>% 
+  html_nodes("table") %>%
+  html_table(fill = T) 
+
+table_historic <- tables[[4]] %>%
+  dplyr::bind_rows() %>%
+  janitor::clean_names(case = "upper_camel")
+
+table_historic <- data.frame(lapply(table_historic, function(x) {gsub("BY", " BY", x)})) 
+table_historic <- data.frame(lapply(table_historic, function(x) {gsub("WY", " WY", x)})) 
+```
+
+```{r, echo = FALSE}
+flextable(table_historic) %>%
+  vline()%>%
+  hline() %>%
+  border_outer() %>%
+  width(width = 1, unit = "in") %>%
+  font(fontname = 'Segoe UI', part = "body") %>%
+  font(fontname = 'Segoe UI Semibold', part = "header") %>%
+  fontsize(size = 12, part = "header") %>%
+  fontsize(size = 10, part = "body")
+```
+
+#### TABLE X. Spring-run surrogate release information and loss.Last updated `r format(Sys.time(), '%m/%d/%Y')`
+```{r, echo = FALSE}
+
+
+table_surrogate <- tables[[8]] %>%
+  dplyr::bind_rows() %>%
+  janitor::clean_names(case = "upper_camel") %>%
+  select(-4,-8,-14,-11) %>%
+  mutate(Proportion = round((ConfirmedLoss/LossThreshold0_25PercentOfCwtReleased)*100,1)) %>%
+  mutate(Loss = paste0(ConfirmedLoss,' (',Proportion,'%)'),
+         'First/Last Loss' = paste0(format(as.Date(FirstLoss), '%b %d'),'/',format(as.Date(LastLoss), '%b %d'))) %>%
+  select(1,2,'Release Date' = 3, 'Run' = 4, 'Release Size' = 5, 'CWT Released' = 6, 'Loss Threshold' = 7, 12,13)
+  
+
+```
+
+```{r, echo = FALSE}
+flextable(table_surrogate) %>%
+  vline()%>%
+  hline() %>%
+  border_outer() %>%
+  width(width = 1, unit = "in") %>%
+  font(fontname = 'Segoe UI', part = "body") %>%
+  font(fontname = 'Segoe UI Semibold', part = "header") %>%
+  fontsize(size = 12, part = "header") %>%
+  fontsize(size = 10, part = "body")
+```
