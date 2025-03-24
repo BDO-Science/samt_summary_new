@@ -1,5 +1,5 @@
 ---
-output: html_document
+output: word_document
 ---
 
 ```{r setup, include=FALSE}
@@ -24,17 +24,27 @@ SHtriggers <- sum(SH_weekly$triggered == "Yes")
 ```
 
 
-```{r, fig.width=8, fig.height=5, fig.align='center', echo = FALSE}
-graph1
+```{r, fig.width=7, fig.height=4, echo = FALSE}
 graph2
 ```
 
-```{r, fig.width=8, fig.height=8, fig.align='center', echo = FALSE}
+```{r, fig.width=8, fig.height=10, echo = FALSE}
 combined_graph
 ```
 
 ### SACPAS TABLES
-
+#### TABLE X. Winter-run weekly distributed loss threshold.Last updated `r format(Sys.time(), '%m/%d/%Y')`
+```{r, echo = FALSE}
+flextable(wr_table)%>%
+  vline()%>%
+  hline() %>%
+  border_outer() %>%
+  width(width = 1, unit = "in") %>%
+  font(fontname = 'Segoe UI', part = "body") %>%
+  font(fontname = 'Segoe UI Semibold', part = "header") %>%
+  fontsize(size = 12, part = "header") %>%
+  fontsize(size = 10, part = "body")
+```
 #### TABLE X. Historic migration and salvage patterns.Last updated `r format(Sys.time(), '%m/%d/%Y')`
 ```{r, echo = FALSE}
 
