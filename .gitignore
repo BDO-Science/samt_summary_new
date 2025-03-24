@@ -2,5 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
-LossSummary.R
-.png
+*.png
+*.csv
