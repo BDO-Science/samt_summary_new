@@ -24,7 +24,8 @@ outlook_app <- COMCreate("Outlook.Application")
 email <- outlook_app$CreateItem(0)  # 0 corresponds to olMailItem
 
 # Set email properties
-email[["To"]] <- "jaisrael@usbr.gov; cehlo@usbr.gov; avaisvil@usbr.gov; bmahardja@usbr.gov; lejohnson@usbr.gov; mmanzo@usbr.gov; dmmooney@usbr.gov; twashburn@usbr.gov; Farida.Islam@water.ca.gov; Jeffrey.Onsted@water.ca.gov"  # Change to the recipient's email address
+email[["To"]] <- "jaisrael@usbr.gov; cehlo@usbr.gov; avaisvil@usbr.gov; bmahardja@usbr.gov; lejohnson@usbr.gov; kristin.begun@noaa.gov;
+mmanzo@usbr.gov; dmmooney@usbr.gov; twashburn@usbr.gov; Farida.Islam@water.ca.gov; Jeffrey.Onsted@water.ca.gov"  # Change to the recipient's email address
 email[["Subject"]] <- paste0("Salmonid Loss as of ", format(Sys.Date(), "%B %d, %Y"))
 
 img_path <- file.path(tempdir(), "Loss_Table.png")
