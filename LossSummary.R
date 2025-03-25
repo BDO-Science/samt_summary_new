@@ -20,6 +20,12 @@ salmon_raw <- read_csv(max(file_names[grep('salmon', file_names, ignore.case = T
     grepl('/', SampleDate) ~ mdy(SampleDate),
     grepl('-', SampleDate) ~ ymd(SampleDate),
     TRUE ~ NA_Date_  # Ensures missing values are handled properly
+  ), DNA_Run = ifelse(
+    Date == as.Date("2025-03-18") & 
+      format(Time, "%H:%M:%S") == "11:00:00" & 
+      LGT == 107, 
+    "UW", 
+    DNA_Run  # Ensure to use the correct column name
   ))
 
 steelhead_raw <- read_csv(max(file_names[grep('steelhead', file_names, ignore.case = TRUE)]))
@@ -37,12 +43,13 @@ wr_thresholds <- read_csv('CodeFiles/weeklyThresholds.csv') %>% #pulling in week
 
 #processing salmon loss table for WR
 temp <- salmon_raw %>%
-  filter(AdClip == 'N' & (.[[8]] == 'W' | .[[9]] == 'W')) %>%
-  select(Date, Size_Race = 8, DNA_Race = 9, LOSS) %>%  # Ensure Date is included
+  filter(AdClip == 'N' & 
+           (.[[8]] == 'W' | DNA_Run == 'W' | DNA_Run == 'UW')) %>%
+  select(Date, Size_Run = 8, DNA_Run, LOSS) %>%
   mutate(confirmed = case_when(
-    Size_Race == 'W' & DNA_Race != 'W' ~ 'NO',
-    DNA_Race == 'W' ~ 'YES',
-    Size_Race == 'W' & is.na(DNA_Race) ~ 'PARTIAL'
+    Size_Run == 'W' & DNA_Run != 'W' ~ 'NO',
+    DNA_Run == 'W' ~ 'YES',
+    Size_Run == 'W' & is.na(DNA_Run) ~ 'PARTIAL'
   )) %>%
   filter(confirmed != 'NO') %>%
   group_by(Date, confirmed) %>%
@@ -173,7 +180,7 @@ SH_weekly_WY <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date(Sys.Date())
 ############cumulative loss of steelhead and winter-run
 temp_wr <- salmon_raw %>%
   filter(AdClip == 'N') %>%
-  filter(.[[8]] == 'W' & (.[[9]] == 'W'| is.na(.[[9]]))) %>%
+  filter(.[[8]] == 'W' & (.[[9]] == 'W'| .[[9]] == 'UW' | is.na(.[[9]]))) %>%
   mutate(facility = if_else(FACILITY == 2, 'CVP', 'SWP')) %>%
   select(Date, facility, loss=LOSS) %>%
   mutate(species = 'Winter-run')
