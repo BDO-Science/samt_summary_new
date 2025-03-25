@@ -10,7 +10,11 @@ file_names <- list.files(path = source_folder,
 
 #pull in current loss data
 salmon_raw <- read_csv(max(file_names[grep('salmon', file_names, ignore.case = TRUE)])) %>%
-  mutate(Date = ymd(SampleDate)) %>%
+  mutate(Date = case_when(
+    grepl('/', SampleDate) ~ mdy(SampleDate),
+    grepl('-', SampleDate) ~ ymd(SampleDate),
+    TRUE ~ NA_Date_  # Ensures missing values are handled properly
+  )) %>%
   filter(DNA_Run == 'W')
 
 data <- read.csv(url) %>% 

@@ -25,7 +25,7 @@ salmon_raw <- read_csv(max(file_names[grep('salmon', file_names, ignore.case = T
       format(Time, "%H:%M:%S") == "11:00:00" & 
       LGT == 107, 
     "UW", 
-    DNA_Run  # Ensure to use the correct column name
+    .[[9]]  # Ensure to use the correct column name
   ))
 
 steelhead_raw <- read_csv(max(file_names[grep('steelhead', file_names, ignore.case = TRUE)]))
@@ -44,8 +44,8 @@ wr_thresholds <- read_csv('CodeFiles/weeklyThresholds.csv') %>% #pulling in week
 #processing salmon loss table for WR
 temp <- salmon_raw %>%
   filter(AdClip == 'N' & 
-           (.[[8]] == 'W' | DNA_Run == 'W' | DNA_Run == 'UW')) %>%
-  select(Date, Size_Run = 8, DNA_Run, LOSS) %>%
+           (.[[8]] == 'W' | .[[9]] == 'W' | .[[9]] == 'UW')) %>%
+  select(Date, Size_Run = 8, DNA_Run = 9, LOSS) %>%
   mutate(confirmed = case_when(
     Size_Run == 'W' & DNA_Run != 'W' ~ 'NO',
     DNA_Run == 'W' ~ 'YES',

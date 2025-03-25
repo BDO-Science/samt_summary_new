@@ -11,6 +11,7 @@ library(officer)
 
 source('spaghetti.R')
 source('LossSummary.R')
+source('Tillotson/tillotsonv4.R')
 WRloss <- cumulative_loss %>% filter(species == 'Winter-run') %>%
   summarize(maxloss = max(cumul_loss)) %>% pull()
 partial <- temp %>% filter(confirmed == 'PARTIAL') %>%
@@ -32,6 +33,9 @@ graph2
 combined_graph
 ```
 
+```{r, fig.width=10, fig.height=6, echo = FALSE}
+tillotson_graph
+```
 ### SACPAS TABLES
 #### TABLE X. Winter-run weekly distributed loss threshold.Last updated `r format(Sys.time(), '%m/%d/%Y')`
 ```{r, echo = FALSE}
