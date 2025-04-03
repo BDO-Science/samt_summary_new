@@ -107,3 +107,8 @@ flextable(table_surrogate) %>%
   fontsize(size = 12, part = "header") %>%
   fontsize(size = 10, part = "body")
 ```
+
+```{r, echo = FALSE}
+wr_till <- "https://www.cbr.washington.edu/sacramento/cohort/include_wrc/load_plot_tillotson_predicted_loss-1.png"
+```
+!["Winter Run Loss Plot"](`r wr_till`)

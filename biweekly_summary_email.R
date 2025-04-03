@@ -25,7 +25,7 @@ email <- outlook_app$CreateItem(0)  # 0 corresponds to olMailItem
 
 # Set email properties
 email[["To"]] <- "jaisrael@usbr.gov; cehlo@usbr.gov; avaisvil@usbr.gov; bmahardja@usbr.gov; lejohnson@usbr.gov; kristin.begun@noaa.gov;
-mmanzo@usbr.gov; dmmooney@usbr.gov; twashburn@usbr.gov; Farida.Islam@water.ca.gov; Jeffrey.Onsted@water.ca.gov"  # Change to the recipient's email address
+mmanzo@usbr.gov; dmmooney@usbr.gov; twashburn@usbr.gov; Farida.Islam@water.ca.gov; Jeffrey.Onsted@water.ca.gov; ashamilton@usbr.gov"  # Change to the recipient's email address
 email[["Subject"]] <- paste0("Salmonid Loss as of ", format(Sys.Date(), "%B %d, %Y"))
 
 img_path <- file.path(tempdir(), "Loss_Table.png")
@@ -49,7 +49,7 @@ img_base64 <- base64enc::dataURI(file = img_path, mime = "image/png")
 # Construct the email body with embedded table and image
 email_body <- paste0(
   "<p>Hi all,</p>",
-  "<p>Please see the summary of the most recent loss estimates at salvage facilities.</p>",
+  "<p>Please see the summary of the most recent loss estimates at salvage facilities and please note that data is preliminary and subject to change.</p>",
   "<ul>",
   "<li>Total annual loss of natural Winter-run Chinook Salmon as of ", 
   format(Sys.Date() - 1, "%B %d, %Y"), 
