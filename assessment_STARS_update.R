@@ -7,11 +7,20 @@ library(readr)
 library(lubridate)
 
 # Get a list of all files that start with "Data.WR"
-file_list <- list.files(pattern = "^Data\\.WR.*\\.csv$")
+file_list <- list.files(pattern = "^Data\\.WR.*\\.csv$", full.names = TRUE)
 
-# Read all files and combine them into a single data frame
-data_list <- lapply(file_list, read_csv)
-data <- do.call(rbind, data_list)
+# Check if there are any files that match the pattern
+if (length(file_list) > 0) {
+  # Get the most recent file based on modification time
+  most_recent_file <- file_list[which.max(file.info(file_list)$mtime)]
+  
+  # Read the most recent file into a data frame
+  data <- read_csv(most_recent_file)
+} else {
+  # Handle the case where no files are found
+  data <- NULL
+  message("No files found matching the pattern.")
+}
 
 # Convert Date column to Date format
 data$Date <- as.Date(data$Date, format="%m/%d/%Y")
@@ -108,21 +117,19 @@ ggplot(travel_time_long, aes(x = Date, y = Est, color = Location)) +
 
 
 # Select only the overall survival columns
-data_overall <- data |>
+data_overall_survival <- data |>
   select(Date, 
          Survival_Overall_Est, 
          Survival_Overall_LCL_80, 
          Survival_Overall_UCL_80) |>
   rename(Estimate = Survival_Overall_Est, 
          LCL = Survival_Overall_LCL_80, 
-         UCL = Survival_Overall_UCL_80)
-
-# Convert survival values to numeric
-data_overall_survival <- data_overall |>
-  mutate(across(c(Estimate, LCL, UCL), as.numeric))
+         UCL = Survival_Overall_UCL_80) |>
+  mutate(across(c(Estimate, LCL, UCL), as.numeric)) |>
+  filter(Date >= as.Date("2024-10-01"))
 
 # Plot overall survival estimates with 80% credible intervals
-ggplot(data_overall, aes(x = Date, y = Estimate)) +
+ggplot(data_overall_survival, aes(x = Date, y = Estimate)) +
   geom_line(color = "black", linewidth = 1) +
   geom_ribbon(aes(ymin = LCL, ymax = UCL), fill = "grey", alpha = 0.2) +
   labs(title = NULL,
@@ -132,7 +139,8 @@ ggplot(data_overall, aes(x = Date, y = Estimate)) +
   theme(
     panel.border = element_rect(color = "black", fill = NA, size = 1),  # Add a box around the plot
     text = element_text(size = 14, face = "bold")  # Make text bigger and bold
-  )
+  )+
+  scale_x_date(date_breaks = "2 weeks", date_labels = "%d %b")  # Adjust the breaks and labels
 
 
 # Assuming your dataframe is named `data` and has columns:
