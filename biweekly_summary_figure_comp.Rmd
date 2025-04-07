@@ -11,6 +11,7 @@ library(officer)
 
 source('spaghetti.R')
 source('LossSummary.R')
+source('genetics.R')
 source('Tillotson/tillotsonv4.R')
 WRloss <- cumulative_loss %>% filter(species == 'Winter-run') %>%
   summarize(maxloss = max(cumul_loss)) %>% pull()
@@ -24,21 +25,35 @@ WRtriggers <- sum(wr_weekly$triggered == "Yes")
 SHtriggers <- sum(SH_weekly$triggered == "Yes")
 ```
 
+Figure. Cumulative Count of current and historic Genetic WR
+```{r, fig.width=7, fig.height=4, echo = FALSE, warning = FALSE}
+graph_wr
 
-```{r, fig.width=7, fig.height=4, echo = FALSE}
-graph2
 ```
 
-```{r, fig.width=8, fig.height=10, echo = FALSE}
+Figure. Cumulative Loss of current and historic Steelhead
+```{r, fig.width=7, fig.height=4, echo = FALSE, warning = FALSE}
+graph_sh
+
+```
+
+Figure. Histogram of historic genetic winter-run salvage
+```{r, fig.width=7, fig.height=4, echo = FALSE, warning = FALSE}
+genetics
+```
+
+Figure. Summary of WY 2025 loss of CCV steelhead and wild and hatchery winter-run
+```{r, fig.width=8, fig.height=10, echo = FALSE, warning = FALSE}
 combined_graph
 ```
 
-```{r, fig.width=10, fig.height=6, echo = FALSE}
+Figure. Tillotson predictions at different OMRI scenarios
+```{r, fig.width=10, fig.height=6, echo = FALSE, warning = FALSE}
 tillotson_graph
 ```
 ### SACPAS TABLES
 #### TABLE X. Winter-run weekly distributed loss threshold.Last updated `r format(Sys.time(), '%m/%d/%Y')`
-```{r, echo = FALSE}
+```{r, echo = FALSE, warning = FALSE}
 flextable(wr_table)%>%
   vline()%>%
   hline() %>%
@@ -50,7 +65,7 @@ flextable(wr_table)%>%
   fontsize(size = 10, part = "body")
 ```
 #### TABLE X. Historic migration and salvage patterns.Last updated `r format(Sys.time(), '%m/%d/%Y')`
-```{r, echo = FALSE}
+```{r, echo = FALSE, warning = FALSE}
 
 
 samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
@@ -68,7 +83,7 @@ table_historic <- data.frame(lapply(table_historic, function(x) {gsub("BY", " BY
 table_historic <- data.frame(lapply(table_historic, function(x) {gsub("WY", " WY", x)})) 
 ```
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, warning = FALSE}
 flextable(table_historic) %>%
   vline()%>%
   hline() %>%
@@ -81,7 +96,7 @@ flextable(table_historic) %>%
 ```
 
 #### TABLE X. Spring-run surrogate release information and loss.Last updated `r format(Sys.time(), '%m/%d/%Y')`
-```{r, echo = FALSE}
+```{r, echo = FALSE, warning = FALSE}
 
 
 table_surrogate <- tables[[8]] %>%
@@ -96,7 +111,7 @@ table_surrogate <- tables[[8]] %>%
 
 ```
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, warning = FALSE}
 flextable(table_surrogate) %>%
   vline()%>%
   hline() %>%
@@ -108,7 +123,9 @@ flextable(table_surrogate) %>%
   fontsize(size = 10, part = "body")
 ```
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, warning = FALSE}
 wr_till <- "https://www.cbr.washington.edu/sacramento/cohort/include_wrc/load_plot_tillotson_predicted_loss-1.png"
+wr_historic <- "https://www.cbr.washington.edu/sacramento/cohort/include_wrc/load_plot_count_genetic_lad_loss-1.png"
 ```
 !["Winter Run Loss Plot"](`r wr_till`)
+!["Winter Run Historic Loss"](`r wr_historic`)
