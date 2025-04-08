@@ -93,7 +93,7 @@ wr_weekly <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date('2025-06-30'),
   mutate(threshold = round(threshold, 2)) %>%
   mutate(sum_7D_loss = rollsum(loss, k = 7, fill = NA, align = 'right')) %>%
   filter(Date <= Sys.Date() & Date >= Sys.Date() - 6) %>%
-  mutate(triggered = if_else(sum_7D_loss < threshold, 'No', 'Yes')) %>%
+  mutate(triggered = if_else(sum_7D_loss <= threshold, 'No', 'Yes')) %>%
   mutate(loss = if_else(confirmed == 'PARTIAL', paste0(as.character(loss), '*'), as.character(loss))) %>%
   group_by(Date) %>%
   summarise(
