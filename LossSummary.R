@@ -120,8 +120,7 @@ wr_weekly_WY <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date(Sys.Date())
   replace(is.na(.), 0) %>%
   mutate(threshold = round(threshold, 2)) %>%
   mutate(sum_7D_loss = rollsum(loss, k = 7, fill = NA, align = 'right')) %>%
-  mutate(triggered = if_else(sum_7D_loss < threshold, 'No', 'Yes')) %>%
-  mutate(loss = if_else(confirmed == 'PARTIAL', paste0(as.character(loss), '*'), as.character(loss))) 
+  mutate(triggered = if_else(sum_7D_loss < threshold, 'No', 'Yes'))
 
 # Extend the threshold column for one week beyond Sys.Date()
 threshold_extension <- data.frame(Date = seq(as.Date(Sys.Date()) + 1, as.Date(Sys.Date()) + 14, 1)) %>%
@@ -136,24 +135,24 @@ wr_weekly_WY <- bind_rows(wr_weekly_WY %>% filter(Date <= Sys.Date()), threshold
   ungroup()
 
 ############steelhead weekly threshold
-salvage <- steelhead_raw %>% select(1,3,9) %>%
-  pivot_longer(!Date, names_to = 'facility', values_to = 'salvage') %>%
+salvage <- steelhead_raw %>% select(1,4,10) %>%
+  pivot_longer(!Date, names_to = 'facility', values_to = 'loss') %>%
   mutate(Date = mdy(Date)) %>%
   group_by(Date) %>%
-  summarize(salvage = sum(salvage, na.rm = TRUE))
+  summarize(loss = sum(loss, na.rm = TRUE))
 
 SH_weekly <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date('2025-06-30'), 1)) %>%
   left_join(salvage, by = 'Date') %>%
   replace(is.na(.), 0) %>%
-  mutate(sum_7D_salvage = rollsum(salvage, k = 7, fill = NA, align = 'right')) %>%
+  mutate(sum_7D_loss = rollsum(loss, k = 7, fill = NA, align = 'right')) %>%
   filter(Date <= Sys.Date() & Date >= Sys.Date() - 6) %>%
-  mutate(triggered = if_else(sum_7D_salvage < 120, 'No', 'Yes'))
+  mutate(triggered = if_else(sum_7D_loss < 120, 'No', 'Yes'))
 
 thick_border <- fp_border(color = "black", width = 2)
 
 weekly_table <- SH_weekly %>%
   mutate(Date = format(Date, "%b %d")) %>%
-  select(Date, 'Steelhead Daily Salvage' = 2, 'Steelhead 7-day rolling sum salvage' = 3, 'Steelhead Daily Trigger' = 4) %>%
+  select(Date, 'Steelhead Daily Salvage' = 2, 'Steelhead 7-day rolling sum loss' = 3, 'Steelhead Daily Trigger' = 4) %>%
   left_join(wr_table, by = 'Date') %>%
   flextable() %>%
   vline() %>%
@@ -166,7 +165,7 @@ weekly_table <- SH_weekly %>%
   fontsize(size = 12, part = "header") %>%
   fontsize(size = 10, part = "body") %>%
   border(j = 4, border.right = thick_border, part = "all") %>%
-  set_caption(caption = 'Summary of weekly salvage of steelhead and loss of winter-run to inform weekly distributed loss thresholds. Steelhead thresholds are triggered when the 7-day rolling sum of expanded salvage exceeds 120 fish.  Winter-run thresholds are triggered when 7-day rolling sum of loss exceeds the daily threshold based on historic proportion of winter-run present in the delta.*All or a portion of Winter-run loss has not been genetically confirmed',
+  set_caption(caption = 'Summary of weekly loss of steelhead and winter-run to inform weekly distributed loss thresholds. Steelhead thresholds are triggered when the 7-day rolling sum of steelhead loss exceeds 120 fish.  Winter-run thresholds are triggered when 7-day rolling sum of loss exceeds the daily threshold based on historic proportion of winter-run present in the delta.*All or a portion of Winter-run loss has not been genetically confirmed',
               align_with_table = FALSE)
 weekly_table
 
@@ -174,8 +173,8 @@ weekly_table
 SH_weekly_WY <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date(Sys.Date()), 1)) %>%
   left_join(salvage, by = 'Date') %>%
   replace(is.na(.), 0) %>%
-  mutate(sum_7D_salvage = rollsum(salvage, k = 7, fill = NA, align = 'right')) %>%
-  mutate(triggered = if_else(sum_7D_salvage < 120, 'No', 'Yes'))
+  mutate(sum_7D_loss = rollsum(loss, k = 7, fill = NA, align = 'right')) %>%
+  mutate(triggered = if_else(sum_7D_loss < 120, 'No', 'Yes'))
 
 ############cumulative loss of steelhead and winter-run
 temp_wr <- salmon_raw %>%
@@ -246,7 +245,7 @@ thresholds <- data.frame(species = c('Steelhead', 'Steelhead', 'Steelhead',
 # Add a species column to each data frame
 SH_weekly_WY <- SH_weekly_WY %>%
   mutate(species = "Steelhead") %>%
-  rename(sum_7D = sum_7D_salvage)
+  rename(sum_7D = sum_7D_loss)
 
 wr_weekly_WY <- wr_weekly_WY %>%
   mutate(species = "Winter-run") %>%
