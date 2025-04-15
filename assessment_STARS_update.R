@@ -30,7 +30,7 @@ colnames(data) <- gsub(" ", "_", colnames(data))
 
 routing <- data |>
   select(contains("Routing"), Date) |>
-  filter(month(Date) == 3)  # Filter for March (3)
+  filter(month(Date) == 4)  # Filter for March (3)
 
 # Pivot longer
 routing_long <- routing |>
@@ -59,7 +59,7 @@ ggplot(routing_long, aes(x = Date, y = Est, color = Location)) +
 
 survival <- data |>
   select(contains("Survival"), Date) |>
-  filter(month(Date) == 3)  # Filter for March (3)
+  filter(month(Date) == 4)  # Filter for March (3)
 
 # Pivot longer
 survival_long <- survival |>
@@ -88,7 +88,7 @@ ggplot(survival_long, aes(x = Date, y = Est, color = Location)) +
 
 travel_time <- data |>
   select(contains("Median_Travel_Time"), Date) |>
-  filter(month(Date) == 3)  # Filter for March (3)
+  filter(month(Date) == 4)  # Filter for March (3)
 
 # Pivot longer
 travel_time_long <- travel_time |>
