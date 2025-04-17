@@ -47,7 +47,7 @@ sh_weekly_html <- knitr::kable(
   kable_styling(
     full_width = FALSE,
     position = "left",
-    font_size = 10,
+    font_size = 12,
     stripe_color = "#f9f9f9"
   ) %>%
   row_spec(0, bold = TRUE,
