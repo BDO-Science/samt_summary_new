@@ -28,16 +28,19 @@ email[["To"]] <- "jaisrael@usbr.gov; cehlo@usbr.gov; avaisvil@usbr.gov; bmahardj
 mmanzo@usbr.gov; dmmooney@usbr.gov; twashburn@usbr.gov; Farida.Islam@water.ca.gov; Jeffrey.Onsted@water.ca.gov; ashamilton@usbr.gov"  # Change to the recipient's email address
 email[["Subject"]] <- paste0("Salmonid Loss as of ", format(Sys.Date(), "%B %d, %Y"))
 
-img_path <- file.path(tempdir(), "Loss_Table.png")
-raster_img <- flextable::gen_grob(weekly_table)
+# Check if weekly_table is a data frame
+if (!is.data.frame(weekly_table)) {
+  stop("weekly_table is not a data frame. Please ensure it is created correctly.")
+}
 
-# Save as PNG
-png(img_path, width = 1000, height = 1200)
-grid::grid.draw(raster_img)
-dev.off()
+# Create a Word document with the data frame
+doc <- read_docx() %>%
+  body_add_table(value = original_data, style = "table_template")  # Use body_add_table instead of body_add_flextable
+output_path <- paste0('outputs/salvage-summary_', Sys.Date(), '.docx')
+print(doc, target = output_path)
 
-# Attach to email
-email[["Attachments"]]$Add(img_path)
+# Attach the Word document to the email
+email[["Attachments"]]$Add(output_path)
 
 # Save the plot as an image
 img_path <- tempfile(fileext = ".png")
