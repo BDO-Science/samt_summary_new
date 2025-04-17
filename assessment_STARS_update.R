@@ -129,7 +129,7 @@ data_overall_survival <- data |>
   filter(Date >= as.Date("2024-10-01"))
 
 # Plot overall survival estimates with 80% credible intervals
-ggplot(data_overall_survival, aes(x = Date, y = Estimate)) +
+STARS_plot <- ggplot(data_overall_survival, aes(x = Date, y = Estimate)) +
   geom_line(color = "black", linewidth = 1) +
   geom_ribbon(aes(ymin = LCL, ymax = UCL), fill = "grey", alpha = 0.2) +
   labs(title = NULL,
