@@ -36,29 +36,27 @@ ggsave(img_path, plot = combined_graph, width = 10, height = 12)
 # Read the image and convert to base64
 img_base64 <- base64enc::dataURI(file = img_path, mime = "image/png")
 
-n_cols <- ncol(SH_weekly)
+n_cols <- ncol(weekly_table_dataframe)
 column_width <- 100  # adjust to fit your content
 
-sh_weekly_html <- knitr::kable(
-  SH_weekly, format = "html",
+weekly_html <- knitr::kable(
+  weekly_table_dataframe, format = "html",
   align = rep("l", n_cols),
   table.attr = "style='border-collapse: collapse; margin: 0; padding: 0; line-height: 1.2; width: 700px; font-family: Arial; font-size: 10pt;'"
-) %>%
+) |>
   kable_styling(
     full_width = FALSE,
     position = "left",
     font_size = 12,
     stripe_color = "#f9f9f9"
-  ) %>%
+  ) |>
   row_spec(0, bold = TRUE,
-           extra_css = "border-top: 1px solid black; border-bottom: 1px solid black;") %>%
-  column_spec(
-    1:n_cols,
-    width = paste0(column_width, "px"),
-    extra_css = "border-left: none; border-right: none;"
-  ) %>%
-  # Add bottom border to last row
-  row_spec(nrow(SH_weekly), extra_css = "border-bottom: 1px solid black;")
+           extra_css = "border-top: 1px solid black; border-bottom: 1px solid black; white-space: normal;") |>
+column_spec(
+  1:n_cols,
+  width = paste0(column_width, "px"),
+  extra_css = "border-left: none; border-right: none; white-space: normal; word-wrap: break-word;"
+)
 
 # Construct the email body with embedded SH_weekly data
 email_body <- paste0(
@@ -89,7 +87,7 @@ email_body <- paste0(
   "<li>Unconfirmed LAD: <strong>", final_summary$last_week_summary$unconfirmed_W, "</strong></li>",
   "</ul>",
   "<p>Weekly Steelhead Data:</p>",
-  sh_weekly_html,
+  weekly_html,
   "<p><img src='", img_base64, "' alt='Loss Graph' style='width: 100%; max-width: 800px;'/></p>",
   "<p>Best regards,<br>SaMT Team</p>" 
 )
