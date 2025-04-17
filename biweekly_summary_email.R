@@ -6,6 +6,7 @@ library(RDCOMClient)  # Load the RDCOMClient library
 library(knitr)
 library(base64enc)
 library(magick)
+library(kableExtra)
 
 source('LossSummary.R')
 
@@ -28,20 +29,6 @@ email[["To"]] <- "jaisrael@usbr.gov; cehlo@usbr.gov; avaisvil@usbr.gov; bmahardj
 mmanzo@usbr.gov; dmmooney@usbr.gov; twashburn@usbr.gov; Farida.Islam@water.ca.gov; Jeffrey.Onsted@water.ca.gov; ashamilton@usbr.gov"  # Change to the recipient's email address
 email[["Subject"]] <- paste0("Salmonid Loss as of ", format(Sys.Date(), "%B %d, %Y"))
 
-# Check if weekly_table is a data frame
-if (!is.data.frame(weekly_table)) {
-  stop("weekly_table is not a data frame. Please ensure it is created correctly.")
-}
-
-# Create a Word document with the data frame
-doc <- read_docx() %>%
-  body_add_table(value = original_data, style = "table_template")  # Use body_add_table instead of body_add_flextable
-output_path <- paste0('outputs/salvage-summary_', Sys.Date(), '.docx')
-print(doc, target = output_path)
-
-# Attach the Word document to the email
-email[["Attachments"]]$Add(output_path)
-
 # Save the plot as an image
 img_path <- tempfile(fileext = ".png")
 ggsave(img_path, plot = combined_graph, width = 10, height = 12)
@@ -49,7 +36,31 @@ ggsave(img_path, plot = combined_graph, width = 10, height = 12)
 # Read the image and convert to base64
 img_base64 <- base64enc::dataURI(file = img_path, mime = "image/png")
 
-# Construct the email body with embedded table and image
+n_cols <- ncol(SH_weekly)
+column_width <- 100  # adjust to fit your content
+
+sh_weekly_html <- knitr::kable(
+  SH_weekly, format = "html",
+  align = rep("l", n_cols),
+  table.attr = "style='border-collapse: collapse; margin: 0; padding: 0; line-height: 1.2; width: 700px; font-family: Arial; font-size: 10pt;'"
+) %>%
+  kable_styling(
+    full_width = FALSE,
+    position = "left",
+    font_size = 10,
+    stripe_color = "#f9f9f9"
+  ) %>%
+  row_spec(0, bold = TRUE,
+           extra_css = "border-top: 1px solid black; border-bottom: 1px solid black;") %>%
+  column_spec(
+    1:n_cols,
+    width = paste0(column_width, "px"),
+    extra_css = "border-left: none; border-right: none;"
+  ) %>%
+  # Add bottom border to last row
+  row_spec(nrow(SH_weekly), extra_css = "border-bottom: 1px solid black;")
+
+# Construct the email body with embedded SH_weekly data
 email_body <- paste0(
   "<p>Hi all,</p>",
   "<p>Please see the summary of the most recent loss estimates at salvage facilities and please note that data is preliminary and subject to change.</p>",
@@ -66,7 +77,7 @@ email_body <- paste0(
   "<li>There have been <strong>", WRtriggers, "</strong> triggers of the Winter-run and <strong>", SHtriggers, "</strong> triggers of the steelhead distributed weekly loss thresholds in the past week.</li>",
   "<ul>",
   "<p>Season total Winter-run Chinook salmon:</p>",
-   "<ul>",
+  "<ul>",
   "<li>Genetically confirmed: <strong>", final_summary$overall_summary$DNA_Run_W, "</strong></li>",
   "<li>Hatchery: <strong>", final_summary$overall_summary$CWT_Run_W, "</strong></li>",
   "<li>Unconfirmed LAD: <strong>", final_summary$overall_summary$unconfirmed_W, "</strong></li>",
@@ -77,6 +88,8 @@ email_body <- paste0(
   "<li>Hatchery: <strong>", final_summary$last_week_summary$CWT_Run_W, "</strong></li>",
   "<li>Unconfirmed LAD: <strong>", final_summary$last_week_summary$unconfirmed_W, "</strong></li>",
   "</ul>",
+  "<p>Weekly Steelhead Data:</p>",
+  sh_weekly_html,
   "<p><img src='", img_base64, "' alt='Loss Graph' style='width: 100%; max-width: 800px;'/></p>",
   "<p>Best regards,<br>SaMT Team</p>" 
 )

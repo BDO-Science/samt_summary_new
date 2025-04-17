@@ -150,6 +150,9 @@ SH_weekly <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date('2025-06-30'),
 
 thick_border <- fp_border(color = "black", width = 2)
 
+SH_weekly <- SH_weekly |>
+  select(Date, 'Steelhead Daily Salvage' = 2, 'Steelhead 7-day rolling sum loss' = 3, 'Steelhead Daily Trigger' = 4)
+
 weekly_table <- SH_weekly %>%
   mutate(Date = format(Date, "%b %d")) %>%
   select(Date, 'Steelhead Daily Salvage' = 2, 'Steelhead 7-day rolling sum loss' = 3, 'Steelhead Daily Trigger' = 4) %>%
