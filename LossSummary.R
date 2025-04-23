@@ -150,9 +150,11 @@ SH_weekly <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date('2025-06-30'),
 
 thick_border <- fp_border(color = "black", width = 2)
 
-weekly_table <- SH_weekly %>%
+SH_table <- SH_weekly %>%
   mutate(Date = format(Date, "%b %d")) %>%
-  select(Date, 'Steelhead Daily Salvage' = 2, 'Steelhead 7-day rolling sum loss' = 3, 'Steelhead Daily Trigger' = 4) %>%
+  select(Date, 'Steelhead Daily Salvage' = 2, 'Steelhead 7-day rolling sum loss' = 3, 'Steelhead Daily Trigger' = 4) 
+
+weekly_table <- SH_table %>%
   left_join(wr_table, by = 'Date') %>%
   flextable() %>%
   vline() %>%
@@ -291,6 +293,26 @@ loss_graph <- ggplot(cumulative_loss) +
 # Display the graph
 print(loss_graph)
 
+###just steelhead loss
+sh_loss_graph <- ggplot(filter(cumulative_loss, species == 'Steelhead')) +
+  geom_line(aes(x = Date, y = cumul_loss), linetype = 'dashed', linewidth = 1) +
+  #geom_col(aes(x = Date, y = loss, fill = facility), position = 'dodge') +
+  geom_label(filter(lossmax, species == 'Steelhead'), mapping = aes(x = Date + 1, y = cumul_loss, 
+                                    label = paste0(cumul_loss, ' (', threshold, '%)')), 
+             fontface = 'bold', size = 4, nudge_x = -10) +
+  #geom_col(aes(x = Date, y = loss, fill = facility), position = 'dodge') +
+  geom_hline(aes(yintercept = 3000), linetype = 'dotted', linewidth = 1) +
+  annotate(geom = 'label', x = as.Date('2025-01-06'), y = 3000, label = 'Annual Loss Threshold', size = 4) +
+  labs(y = 'Cumulative Loss', title = paste0('WY2025 Steelhead Cumulative Loss as of ',format(Sys.Date( )-1, "%B %d, %Y"))) +
+  theme_bw() +
+  theme(plot.margin = margin(0.2, 0.5, 0.2, 0.2, unit = 'cm'),
+        axis.title.y = element_text(margin = margin(r = 15), size = 15),
+        axis.title.x = element_text(margin = margin(t = 15), size = 15),
+        strip.text = element_text(size = 13),
+        axis.text.x = element_text(size = 13, angle = 45, hjust = 1),  # Adjust angle
+        axis.text.y = element_text(size = 13),
+        legend.position = 'bottom')
+sh_loss_graph
 #####summarizing hatchery winter-run loss
 wr_hatch <- salmon_raw %>%
   filter(.[[10]] == 'W') %>%

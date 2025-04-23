@@ -165,6 +165,22 @@ tillotson_graph <- bind_rows(predictionsList) %>%
         axis.text.y = element_text(size = 13),
         legend.position = 'bottom')
 tillotson_graph
+
+tillotson_graph_sh <- bind_rows(predictionsList) %>% 
+  filter(Species == 'Steelhead') %>%
+  ggplot(aes(x = factor(OMR))) +
+  geom_crossbar(aes(y = median, ymin = qtl25, ymax = qtl75),  fill = '#CC9900') +
+  labs(title = 'Salvage and Loss Predictions at different OMRI values', x = 'OMRI', y = 'Predicted Weekly Loss', fill = 'Median Predicted Loss') +
+  theme_bw() +
+  theme(plot.margin = ggplot2::margin(0.5, 0.5, 0.1, 0.2, unit = 'cm'),
+        title = element_text(size = 14),
+        axis.title.y = element_text(margin = ggplot2::margin(r = 15), size = 15),
+        axis.title.x = element_text(margin = ggplot2::margin(t = 10), size = 15),
+        strip.text = element_text(size = 13),
+        axis.text.x = element_text(size = 13),
+        axis.text.y = element_text(size = 13),
+        legend.position = 'bottom')
+tillotson_graph_sh
 #write SH to csv file for input into assessment
 all %>% filter(Species == 'Steelhead') %>% 
   select(-1) %>%

@@ -24,16 +24,11 @@ SHloss <- cumulative_loss %>% filter(species == 'Steelhead') %>%
 WRtriggers <- sum(wr_weekly$triggered == "Yes")
 SHtriggers <- sum(SH_weekly$triggered == "Yes")
 ```
+**WINTER-RUN GRAPHS**
 
 Figure. Cumulative Count of current and historic Genetic WR
 ```{r, fig.width=7, fig.height=4, echo = FALSE, warning = FALSE}
 graph_wr
-
-```
-
-Figure. Cumulative Loss of current and historic Steelhead
-```{r, fig.width=7, fig.height=4, echo = FALSE, warning = FALSE}
-graph_sh
 
 ```
 
@@ -52,7 +47,7 @@ Figure. Tillotson predictions at different OMRI scenarios
 tillotson_graph
 ```
 ### SACPAS TABLES
-#### TABLE X. Winter-run weekly distributed loss threshold.Last updated `r format(Sys.time(), '%m/%d/%Y')`
+TABLE X. Winter-run weekly distributed loss threshold.Last updated `r format(Sys.time(), '%m/%d/%Y')`
 ```{r, echo = FALSE, warning = FALSE}
 flextable(wr_table)%>%
   vline()%>%
@@ -64,7 +59,7 @@ flextable(wr_table)%>%
   fontsize(size = 12, part = "header") %>%
   fontsize(size = 10, part = "body")
 ```
-#### TABLE X. Historic migration and salvage patterns.Last updated `r format(Sys.time(), '%m/%d/%Y')`
+TABLE. Historic migration and salvage patterns.Last updated `r format(Sys.time(), '%m/%d/%Y')`
 ```{r, echo = FALSE, warning = FALSE}
 
 
@@ -95,7 +90,74 @@ flextable(table_historic) %>%
   fontsize(size = 10, part = "body")
 ```
 
-#### TABLE X. Spring-run surrogate release information and loss.Last updated `r format(Sys.time(), '%m/%d/%Y')`
+
+```{r, echo = FALSE, warning = FALSE}
+wr_till <- "https://www.cbr.washington.edu/sacramento/cohort/include_wrc/load_plot_tillotson_predicted_loss-1.png"
+wr_historic <- "https://www.cbr.washington.edu/sacramento/cohort/include_wrc/load_plot_count_genetic_lad_loss-1.png"
+```
+!["Winter Run Loss Plot"](`r wr_till`)
+!["Winter Run Historic Loss"](`r wr_historic`)
+
+**STEELHEAD THINGS**
+
+```{r, echo = FALSE, warning = FALSE}
+filter(table_historic, grepl('Steelhead', Species)) %>%
+  flextable() %>%
+  vline()%>%
+  hline() %>%
+  border_outer() %>%
+  width(width = 1, unit = "in") %>%
+  font(fontname = 'Segoe UI', part = "body") %>%
+  font(fontname = 'Segoe UI Semibold', part = "header") %>%
+  fontsize(size = 12, part = "header") %>%
+  fontsize(size = 10, part = "body")
+```
+  
+TABLE X. Steelhead weekly distributed loss threshold.Last updated `r format(Sys.time(), '%m/%d/%Y')`
+```{r, echo = FALSE, warning = FALSE}
+flextable(SH_table)%>%
+  vline()%>%
+  hline() %>%
+  border_outer() %>%
+  width(width = 1, unit = "in") %>%
+  font(fontname = 'Segoe UI', part = "body") %>%
+  font(fontname = 'Segoe UI Semibold', part = "header") %>%
+  fontsize(size = 12, part = "header") %>%
+  fontsize(size = 10, part = "body")
+```
+
+Figures from SacPAS for steelhead
+```{r, fig.width=7, fig.height=4, echo = FALSE, warning = FALSE}
+
+sh_historic <- "https://www.cbr.washington.edu/sacramento/cohort/include_stlhd/load_plot_count_cumulative_loss-1.png"
+
+sh_tillotson <- "https://www.cbr.washington.edu/sacramento/cohort/include_stlhd/load_plot_tillotson_predicted_loss-1.png"
+
+sh_histogram <- "https://www.cbr.washington.edu/sacramento/cohort/include_stlhd/load_plot_count_total_loss-1.png"
+
+```
+!["Steelhead historic loss"](`r sh_historic`)
+!["Steelhead sacpas tillotson"](`r sh_tillotson`)
+!["Steelhead clipped and unclipped loss by year"](`r sh_histogram`)
+
+Figure. SH cumulative loss
+```{r, fig.width=7, fig.height=5, echo = FALSE, warning = FALSE}
+sh_loss_graph
+```
+
+Figure. Histogram of historic clipped and unclipped steelhead salvage
+```{r, fig.width=7, fig.height=5, echo = FALSE, warning = FALSE}
+sh_all_graph
+```
+
+Figure. Tillotson predictions for steelhead at different OMRI scenarios
+```{r, fig.width=7, fig.height=5, echo = FALSE, warning = FALSE}
+tillotson_graph_sh
+```
+
+**SPRING-RUN THINGS**
+
+TABLE X. Spring-run surrogate release information and loss.Last updated `r format(Sys.time(), '%m/%d/%Y')`
 ```{r, echo = FALSE, warning = FALSE}
 
 
@@ -122,10 +184,3 @@ flextable(table_surrogate) %>%
   fontsize(size = 12, part = "header") %>%
   fontsize(size = 10, part = "body")
 ```
-
-```{r, echo = FALSE, warning = FALSE}
-wr_till <- "https://www.cbr.washington.edu/sacramento/cohort/include_wrc/load_plot_tillotson_predicted_loss-1.png"
-wr_historic <- "https://www.cbr.washington.edu/sacramento/cohort/include_wrc/load_plot_count_genetic_lad_loss-1.png"
-```
-!["Winter Run Loss Plot"](`r wr_till`)
-!["Winter Run Historic Loss"](`r wr_historic`)
