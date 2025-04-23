@@ -9,6 +9,7 @@ library(rvest)
 library(flextable)
 library(officer)
 
+source('assessment_STARS_update.R')
 source('spaghetti.R')
 source('LossSummary.R')
 source('genetics.R')
@@ -25,6 +26,12 @@ WRtriggers <- sum(wr_weekly$triggered == "Yes")
 SHtriggers <- sum(SH_weekly$triggered == "Yes")
 ```
 **WINTER-RUN GRAPHS**
+
+Figure. STARS prediction with 80% CIs.
+```{r, fig.width=7, fig.height=4, echo = FALSE, warning = FALSE}
+STARS_plot
+
+```
 
 Figure. Cumulative Count of current and historic Genetic WR
 ```{r, fig.width=7, fig.height=4, echo = FALSE, warning = FALSE}

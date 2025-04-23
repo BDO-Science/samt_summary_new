@@ -6,8 +6,8 @@ library(tidyr)
 library(readr)
 library(lubridate)
 
-# Get a list of all files that start with "Data.WR"
-file_list <- list.files(pattern = "^Data\\.WR.*\\.csv$", full.names = TRUE)
+# Get a list of all files that start with "Data.WR" for winter-run or "Data.LF" for late-fall run
+file_list <- list.files(pattern = "^Data\\.LF.*\\.csv$", full.names = TRUE)
 
 # Check if there are any files that match the pattern
 if (length(file_list) > 0) {
@@ -30,14 +30,14 @@ colnames(data) <- gsub(" ", "_", colnames(data))
 
 routing <- data |>
   select(contains("Routing"), Date) |>
-  filter(month(Date) == 3)  # Filter for March (3)
+  filter(month(Date) == 4)  # Filter for March (3)
 
 # Pivot longer
 routing_long <- routing |>
   pivot_longer(
     cols = -c(Date, starts_with("Delta")),  # Exclude "Date" and "Delta_*" columns
     names_to = c("Location", ".value"),
-    names_pattern = "Routing_Probability_([A-Za-z_]+)_(Est|LCL_80|UCL_80)"
+    names_pattern = "(?i)Routing_probability_([A-Za-z_]+)_(Est|LCL|UCL)"
   ) 
 
 routing_long$Year <- year(routing_long$Date)
@@ -45,7 +45,7 @@ routing_long$Year <- year(routing_long$Date)
 # Plot
 ggplot(routing_long, aes(x = Date, y = Est, color = Location)) +
   geom_line() +  # Line for estimate
-  geom_ribbon(aes(ymin = LCL_80, ymax = UCL_80, fill = Location), alpha = 0.2) +  # 80% Credible Interval
+  geom_ribbon(aes(ymin = LCL, ymax = UCL, fill = Location), alpha = 0.2) +  # 80% Credible Interval
   facet_wrap(~ Year, scales = "free_x") +  # Facet by Year and Location
   theme_minimal() +
   labs(
@@ -59,14 +59,14 @@ ggplot(routing_long, aes(x = Date, y = Est, color = Location)) +
 
 survival <- data |>
   select(contains("Survival"), Date) |>
-  filter(month(Date) == 3)  # Filter for March (3)
+  filter(month(Date) == 4)  # Filter for March (3)
 
 # Pivot longer
 survival_long <- survival |>
   pivot_longer(
     cols = -c(Date, starts_with("Delta")),  # Exclude "Date" and "Delta_*" columns
     names_to = c("Location", ".value"),
-    names_pattern = "Survival_([A-Za-z_]+)_(Est|LCL_80|UCL_80)"
+    names_pattern = "(?i)Survival_([A-Za-z_]+)_(Est|LCL|UCL)"
   ) 
 
 survival_long$Year <- year(survival_long$Date)
@@ -74,7 +74,7 @@ survival_long$Year <- year(survival_long$Date)
 # Plot
 ggplot(survival_long, aes(x = Date, y = Est, color = Location)) +
   geom_line() +  # Line for estimate
-  geom_ribbon(aes(ymin = LCL_80, ymax = UCL_80, fill = Location), alpha = 0.2) +  # 80% Credible Interval
+  geom_ribbon(aes(ymin = LCL, ymax = UCL, fill = Location), alpha = 0.2) +  # 80% Credible Interval
   facet_wrap(~ Year, scales = "free_x") +  # Facet by Year
   theme_minimal() +
   labs(
@@ -88,14 +88,14 @@ ggplot(survival_long, aes(x = Date, y = Est, color = Location)) +
 
 travel_time <- data |>
   select(contains("Median_Travel_Time"), Date) |>
-  filter(month(Date) == 3)  # Filter for March (3)
+  filter(month(Date) == 4)  # Filter for March (3)
 
 # Pivot longer
 travel_time_long <- travel_time |>
   pivot_longer(
     cols = -c(Date, starts_with("Delta")),  # Exclude "Date" and "Delta_*" columns
     names_to = c("Location", ".value"),
-    names_pattern = "Median_Travel_Time_([A-Za-z_]+)_(Est|LCL_80|UCL_80)"
+    names_pattern = "(?i)Median_Travel_Time_([A-Za-z_]+)_(Est|LCL|UCL)"
   ) 
 
 travel_time_long$Year <- year(travel_time_long$Date)
@@ -103,7 +103,7 @@ travel_time_long$Year <- year(travel_time_long$Date)
 # Plot
 ggplot(travel_time_long, aes(x = Date, y = Est, color = Location)) +
   geom_line() +  # Line for estimate
-  geom_ribbon(aes(ymin = LCL_80, ymax = UCL_80, fill = Location), alpha = 0.2) +  # 80% Credible Interval
+  geom_ribbon(aes(ymin = LCL, ymax = UCL, fill = Location), alpha = 0.2) +  # 80% Credible Interval
   facet_wrap(~ Year, scales = "free_x") +  # Facet by Year
   theme_minimal() +
   labs(
@@ -116,20 +116,25 @@ ggplot(travel_time_long, aes(x = Date, y = Est, color = Location)) +
   theme(legend.position = "bottom")
 
 
-# Select only the overall survival columns
 data_overall_survival <- data |>
-  select(Date, 
-         Survival_Overall_Est, 
-         Survival_Overall_LCL_80, 
-         Survival_Overall_UCL_80) |>
-  rename(Estimate = Survival_Overall_Est, 
-         LCL = Survival_Overall_LCL_80, 
-         UCL = Survival_Overall_UCL_80) |>
+  select(
+    Date,
+    any_of(c("Survival_Overall_Est", "Survival_Overall_LCL_80", "Survival_Overall_UCL_80")),
+    any_of(c("Survival_All_Reaches_Est", "Survival_All_Reaches_LCL", "Survival_All_Reaches_UCL"))
+  ) |>
+  select(Date, everything()) |>  # Ensure Date is first
+  # Conditionally rename columns based on their existence
+  rename(
+    Estimate = any_of(c("Survival_Overall_Est", "Survival_All_Reaches_Est")),
+    LCL = any_of(c("Survival_Overall_LCL_80", "Survival_All_Reaches_LCL")),
+    UCL = any_of(c("Survival_Overall_UCL_80", "Survival_All_Reaches_UCL"))
+  ) |>
   mutate(across(c(Estimate, LCL, UCL), as.numeric)) |>
   filter(Date >= as.Date("2024-10-01"))
 
+
 # Plot overall survival estimates with 80% credible intervals
-ggplot(data_overall_survival, aes(x = Date, y = Estimate)) +
+STARS_plot <- ggplot(data_overall_survival, aes(x = Date, y = Estimate)) +
   geom_line(color = "black", linewidth = 1) +
   geom_ribbon(aes(ymin = LCL, ymax = UCL), fill = "grey", alpha = 0.2) +
   labs(title = NULL,
@@ -141,7 +146,7 @@ ggplot(data_overall_survival, aes(x = Date, y = Estimate)) +
     text = element_text(size = 14, face = "bold")  # Make text bigger and bold
   )+
   scale_x_date(date_breaks = "2 weeks", date_labels = "%d %b")  # Adjust the breaks and labels
-
+STARS_plot
 
 # Assuming your dataframe is named `data` and has columns:
 # 'Date', 'Estimate', 'LCL', and 'UCL'
@@ -149,19 +154,13 @@ ggplot(data_overall_survival, aes(x = Date, y = Estimate)) +
 # Convert Date column to Date format if it's not already
 data$Date <- as.Date(data$Date)
 
-# Filter for February to the end of March
-filtered_data <- data |>
-  filter(Date >= as.Date("2025-02-01"))  # Replace YYYY with the actual year
-
-# Compute the range (min/max) for survival estimates and credible intervals
-range_estimate <- range(filtered_data$Survival_Overall_Est, na.rm = TRUE)
-range_LCL <- range(filtered_data$Survival_Overall_LCL_80, na.rm = TRUE)
-range_UCL <- range(filtered_data$Survival_Overall_UCL_80, na.rm = TRUE)
-
-# Print results
-cat("Survival Estimate Range:", range_estimate, "\n")
-cat("80% LCL Range:", range_LCL, "\n")
-cat("80% UCL Range:", range_UCL, "\n")
+survival_range <- data_overall_survival |>
+  filter(Date >= as.Date("2025-02-01")) |>
+  summarise(
+    range_estimate = range(Estimate, na.rm = TRUE),
+    range_LCL = range(LCL, na.rm = TRUE),
+    range_UCL = range(UCL, na.rm = TRUE)
+  )
 
 
 

@@ -150,7 +150,16 @@ SH_weekly <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date('2025-06-30'),
 
 thick_border <- fp_border(color = "black", width = 2)
 
+<<<<<<< HEAD
 SH_table <- SH_weekly %>%
+=======
+weekly_table_dataframe <- SH_weekly |>
+  mutate(Date = format(Date, "%b %d")) |>
+  select(Date, 'Steelhead Daily Salvage' = 2, 'Steelhead 7-day rolling sum loss' = 3, 'Steelhead Daily Trigger' = 4) |>
+  left_join(wr_table, by = 'Date')
+
+weekly_table <- SH_weekly %>%
+>>>>>>> 68627bbb144120626b1e61fdc8d81b3d2953f098
   mutate(Date = format(Date, "%b %d")) %>%
   select(Date, 'Steelhead Daily Salvage' = 2, 'Steelhead 7-day rolling sum loss' = 3, 'Steelhead Daily Trigger' = 4) 
 
