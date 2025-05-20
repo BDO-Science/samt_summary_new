@@ -8,7 +8,7 @@ library(base64enc)
 library(magick)
 library(kableExtra)
 
-source('LossSummary.R')
+source('loss_summary.R')
 
 # Calculate loss estimates
 WRloss <- cumulative_loss %>% filter(species == 'Winter-run') %>% summarize(maxloss = max(cumul_loss)) %>% pull()

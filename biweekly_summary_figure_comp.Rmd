@@ -9,10 +9,9 @@ library(rvest)
 library(flextable)
 library(officer)
 
-source('assessment_STARS_update.R')
-source('spaghetti.R')
-source('LossSummary.R')
-source('genetics.R')
+#source('assessment_STARS_update.R')
+source('historic_graphs.R')
+source('loss_summary.R')
 source('Tillotson/tillotsonv4.R')
 WRloss <- cumulative_loss %>% filter(species == 'Winter-run') %>%
   summarize(maxloss = max(cumul_loss)) %>% pull()
@@ -28,14 +27,14 @@ SHtriggers <- sum(SH_weekly$triggered == "Yes")
 **WINTER-RUN GRAPHS**
 
 Figure. STARS prediction with 80% CIs.
-```{r, fig.width=7, fig.height=4, echo = FALSE, warning = FALSE}
+```{r echo=FALSE, fig.height=4, fig.width=7, warning=FALSE, eval = FALSE}
 STARS_plot
 
 ```
 
 Figure. Cumulative Count of current and historic Genetic WR
 ```{r, fig.width=7, fig.height=4, echo = FALSE, warning = FALSE}
-graph_wr
+spaghetti_wr
 
 ```
 
@@ -49,7 +48,7 @@ Figure. Summary of WY 2025 loss of CCV steelhead and wild and hatchery winter-ru
 combined_graph
 ```
 
-Figure. Tillotson predictions at different OMRI scenarios
+Figure. Tillotson predictions at different OMRI scenarios for winter-run
 ```{r, fig.width=10, fig.height=6, echo = FALSE, warning = FALSE}
 tillotson_graph
 ```
@@ -121,7 +120,7 @@ filter(table_historic, grepl('Steelhead', Species)) %>%
 ```
   
 TABLE X. Steelhead weekly distributed loss threshold.Last updated `r format(Sys.time(), '%m/%d/%Y')`
-```{r, echo = FALSE, warning = FALSE}
+```{r, echo = FALSE, warning = FALSE, eval = FALSE}
 flextable(SH_table)%>%
   vline()%>%
   hline() %>%
