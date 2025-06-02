@@ -7,7 +7,7 @@ library(readr)
 library(lubridate)
 
 # Get a list of all files that start with "Data.WR" for winter-run or "Data.LF" for late-fall run
-file_list <- list.files(pattern = "^Data\\.LF.*\\.csv$", full.names = TRUE)
+file_list <- list.files(pattern = "^Data\\.WR.*\\.csv$", full.names = TRUE)
 
 # Check if there are any files that match the pattern
 if (length(file_list) > 0) {
