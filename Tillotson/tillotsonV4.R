@@ -184,12 +184,13 @@ tillotson_graph_sh
 #write SH to csv file for input into assessment
 all %>% filter(Species == 'Steelhead') %>% 
   select(-1) %>%
-  write.csv('SHmodel_predictions.csv', row.names = FALSE)
+  write.csv(paste0('Tillotson/outputs/SHmodel_predictions_',Sys.Date(),'.csv'), row.names = FALSE)
 
 #write WR to csv file for input into assessment
 all %>% filter(Species == 'Winter-run') %>% 
   select(-1) %>%
-  write.csv('WRmodel_predictions.csv', row.names = FALSE)
+  write.csv(paste0('Tillotson/outputs/WRmodel_predictions_',Sys.Date(),'.csv'), row.names = FALSE)
 
 
-ggsave(tillotson_graph, file = 'outputs/WR_tillotson.png', width = 9, height = 6)
+ggsave(tillotson_graph, file = paste0('Tillotson/outputs/WR_tillotson_',Sys.Date(),'.png'), width = 9, height = 6)
+ggsave(tillotson_graph_sh, file = paste0('Tillotson/outputs/SH_tillotson_',Sys.Date(),'.png'), width = 9, height = 6)

@@ -7,8 +7,9 @@ library(zoo)
 library(patchwork)
 
 wy <- get_fy(Sys.Date(), opt_fy_start = '07-01')  #pull the water year based on BY designation in LTO docs
-jpe <- 98893
-jpe_hatch <- 135342
+jpe <- 98893 #set natural winter-run JPE
+jpe_hatch <- 135342 #set hatchery JPE
+
 #set source folder, destination folder, and read in filenames of newest files
 source_folder <- 'SalvageFiles/' #where the current files for the summary script to process live
 file_names <- list.files(path = source_folder, 
@@ -144,26 +145,19 @@ salvage <- steelhead_raw %>% select(1,4,10) %>%
 SH_weekly <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date('2025-06-30'), 1)) %>%
   left_join(salvage, by = 'Date') %>%
   replace(is.na(.), 0) %>%
-  mutate(sum_7D_loss = rollsum(loss, k = 7, fill = NA, align = 'right')) %>%
+  mutate(sum_7D_loss = round(rollsum(loss, k = 7, fill = NA, align = 'right'),0)) %>%
   filter(Date <= Sys.Date() & Date >= Sys.Date() - 6) %>%
   mutate(triggered = if_else(sum_7D_loss < 120, 'No', 'Yes'))
 
 thick_border <- fp_border(color = "black", width = 2)
 
-<<<<<<< HEAD
-SH_table <- SH_weekly %>%
-=======
+
 weekly_table_dataframe <- SH_weekly |>
   mutate(Date = format(Date, "%b %d")) |>
-  select(Date, 'Steelhead Daily Salvage' = 2, 'Steelhead 7-day rolling sum loss' = 3, 'Steelhead Daily Trigger' = 4) |>
-  left_join(wr_table, by = 'Date')
+  select(Date, 'Steelhead Daily Salvage' = 2, 'Steelhead 7-day rolling sum loss' = 3, 'Steelhead Daily Trigger' = 4)
 
-weekly_table <- SH_weekly %>%
->>>>>>> 68627bbb144120626b1e61fdc8d81b3d2953f098
-  mutate(Date = format(Date, "%b %d")) %>%
-  select(Date, 'Steelhead Daily Salvage' = 2, 'Steelhead 7-day rolling sum loss' = 3, 'Steelhead Daily Trigger' = 4) 
 
-weekly_table <- SH_table %>%
+weekly_table <- weekly_table_dataframe %>%
   left_join(wr_table, by = 'Date') %>%
   flextable() %>%
   vline() %>%
@@ -209,31 +203,21 @@ cumulative_loss <- steelhead_raw %>% select(1,4,10) %>%
   group_by(species) %>%
   mutate(cumul_loss = cumsum(loss))
 
-last_winter_run_loss <- cumulative_loss %>%
-  filter(species == "Winter-run") %>%
+last_salmonid_loss <- cumulative_loss %>% #for extending the graph to the current date even when loss is 0
   arrange(desc(Date)) %>%
   slice(1) %>%
-  pull(cumul_loss)
+  mutate(Date = Sys.Date() - 1,
+         loss = 0)
 
-# Create the new row
-new_row <- data.frame(
-  Date = max(cumulative_loss$Date),
-  facility = "CVP",  # Assuming CVP since past Winter-run entries are CVP
-  species = "Winter-run",
-  loss = 0,  # No new loss, just carrying forward
-  cumul_loss = last_winter_run_loss  # Maintain the last cumulative loss
-)
-
-# Bind the new row to the dataframe
-cumulative_loss <- cumulative_loss %>%
-  bind_rows(new_row) %>%
+cumulative_loss <- cumulative_loss %>% #binding to the cumulative loss dataframe
+  bind_rows(last_salmonid_loss) %>%
   arrange(Date, species)
 
 lossmax <- cumulative_loss %>% group_by(species) %>% summarize(Date = max(Date), cumul_loss = max(cumul_loss)) %>%
   mutate(threshold = if_else(species == 'Steelhead', (cumul_loss/3000)*100, (cumul_loss/(jpe*.005))*100)) %>%
-  mutate(threshold = round(threshold, 1))
+  mutate(threshold = round(threshold, 1)) #for annotating current cumulative loss and % of JPE to dataframe
 
-thresholds <- data.frame(species = c('Steelhead', 'Steelhead', 'Steelhead', 
+thresholds <- data.frame(species = c('Steelhead', 'Steelhead', 'Steelhead', #for annotations of loss thresholds to dataframe
                                      'Winter-run', 'Winter-run', 'Winter-run'),
                          threshold = c('perc100', 'perc75', 'perc50',
                                        'perc100', 'perc75', 'perc50'),
@@ -268,6 +252,7 @@ combined_weekly <- bind_rows(SH_weekly_WY, wr_weekly_WY)
 # Create a horizontal line data frame for Steelhead
 hline_data <- data.frame(yintercept = 120, species = "Steelhead")
 
+# main graph for natural winter-run and steelhead loss
 loss_graph <- ggplot(cumulative_loss) +
   geom_line(aes(x = Date, y = cumul_loss, color = "Annual Cumulative Loss"), linetype = 'dashed', linewidth = 1) +
   #geom_col(aes(x = Date, y = loss, fill = facility), position = 'dodge') +
@@ -322,6 +307,7 @@ sh_loss_graph <- ggplot(filter(cumulative_loss, species == 'Steelhead')) +
         axis.text.y = element_text(size = 13),
         legend.position = 'bottom')
 sh_loss_graph
+
 #####summarizing hatchery winter-run loss
 wr_hatch <- salmon_raw %>%
   filter(.[[10]] == 'W') %>%
@@ -330,11 +316,22 @@ wr_hatch <- salmon_raw %>%
   mutate(species = 'Winter-run') %>%
   mutate(cumul_loss = cumsum(loss))
 
+last_hatchery_loss <- wr_hatch %>% #for extending the graph to the current date even when loss is 0
+  arrange(desc(Date)) %>%
+  slice(1) %>%
+  mutate(Date = Sys.Date() - 1,
+         loss = 0)
+
+wr_hatch <- wr_hatch %>% #binding to the cumulative loss dataframe
+  bind_rows(last_hatchery_loss) %>%
+  arrange(Date, species)
+
 cumul_max <- max(wr_hatch$cumul_loss)
 max_date <- max(wr_hatch$Date)
 thresholds <- data.frame(threshold = c('100% Threshold', '75% Threshold', '50% Threshold'),
                          value = c(jpe_hatch*.0012, jpe_hatch*.0012*.75, jpe_hatch*.0012*.5))
 
+#main hatchery graph
 wr_hatch_cumul_graph <- ggplot() +
   geom_col(wr_hatch, mapping = aes(x = Date, y = loss, fill = facility), position = 'dodge') +
   geom_line(wr_hatch, mapping = aes(x = Date, y = cumul_loss), linewidth = 1, color = 'blue', linetype = "dashed") +
@@ -360,14 +357,12 @@ wr_hatch_cumul_graph <- ggplot() +
         legend.title = element_blank())
 wr_hatch_cumul_graph
 
-ggsave(plot = loss_graph, file = 'outputs/loss_summary.png', width = 9, height = 6)
-ggsave(wr_hatch_cumul_graph, file = 'outputs/hatchery_summary.png', width = 9, height = 6)
-save_as_docx(weekly_table, loss_graph, path = paste0('outputs/salvage-summary_',Sys.Date(),'.docx'))
-
 # Combine the two graphs
 combined_graph <- loss_graph / wr_hatch_cumul_graph +
   plot_annotation(title = "WY2025 Loss for Steelhead and Winter-run Chinook Salmon") +
   theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
 
-# Display the combined graph
-print(combined_graph)
+ggsave(plot = loss_graph, file = paste0('outputs/natural_loss_summary_',Sys.Date(),'.png'), width = 9, height = 6)
+ggsave(wr_hatch_cumul_graph, file = paste0('outputs/hatchery_loss_summary_',Sys.Date(),'.png'), width = 9, height = 6)
+ggsave(combined_graph, file = paste0('outputs/all_loss_summary_',Sys.Date(),'.png'), width = 9, height = 6)
+save_as_docx(weekly_table, loss_graph, path = paste0('outputs/salvage-summary_',Sys.Date(),'.docx'))
