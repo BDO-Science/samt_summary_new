@@ -1,11 +1,18 @@
+##################################################
+#summary graphs of real-time wr and steelhead loss
+##################################################
+
+#load libraries
 library(tidyverse)
 library(busdater)
 library(flextable)
 library(officer)
 library(zoo)
-# Load necessary library
 library(patchwork)
 
+################data gathering
+
+#set predefined parameters
 wy <- get_fy(Sys.Date(), opt_fy_start = '07-01')  #pull the water year based on BY designation in LTO docs
 jpe <- 98893 #set natural winter-run JPE
 jpe_hatch <- 135342 #set hatchery JPE
@@ -86,7 +93,7 @@ final_summary <- list(
 
 print(final_summary)
   
-
+#winter-run weekly loss for past week table
 wr_weekly <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date('2025-06-30'), 1)) %>%
   left_join(temp, by = 'Date') %>%
   left_join(wr_thresholds, by = 'Date') %>%
@@ -109,12 +116,13 @@ wr_weekly <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date('2025-06-30'),
   ) %>%
   ungroup()
 
+#formating table for joining with steelhead
 wr_table <- wr_weekly %>%
   mutate(Date = format(Date, "%b %d")) %>%
   select(Date, 'Winter-run Daily Loss' = 3, 'Winter-run 7-day rolling sum loss' = 6, 
          'Winter-run Daily Threshold' = 5, 'Winter-run Daily Trigger' = 7)
 
-#this is for the entire water year up until this point
+###########this is for the entire water year up until this point for use in the graph
 wr_weekly_WY <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date(Sys.Date()), 1)) %>%
   left_join(temp, by = 'Date') %>%
   left_join(wr_thresholds, by = 'Date') %>%
@@ -151,12 +159,18 @@ SH_weekly <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date('2025-06-30'),
 
 thick_border <- fp_border(color = "black", width = 2)
 
-
 weekly_table_dataframe <- SH_weekly |>
   mutate(Date = format(Date, "%b %d")) |>
   select(Date, 'Steelhead Daily Salvage' = 2, 'Steelhead 7-day rolling sum loss' = 3, 'Steelhead Daily Trigger' = 4)
 
+#weekly steelhead thresholds for the entire water year for use in graph
+SH_weekly_WY <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date(Sys.Date()), 1)) %>%
+  left_join(salvage, by = 'Date') %>%
+  replace(is.na(.), 0) %>%
+  mutate(sum_7D_loss = rollsum(loss, k = 7, fill = NA, align = 'right')) %>%
+  mutate(triggered = if_else(sum_7D_loss < 120, 'No', 'Yes'))
 
+##############combining steelhead and winter-run weekly loss into one table
 weekly_table <- weekly_table_dataframe %>%
   left_join(wr_table, by = 'Date') %>%
   flextable() %>%
@@ -173,13 +187,6 @@ weekly_table <- weekly_table_dataframe %>%
   set_caption(caption = 'Summary of weekly loss of steelhead and winter-run to inform weekly distributed loss thresholds. Steelhead thresholds are triggered when the 7-day rolling sum of steelhead loss exceeds 120 fish.  Winter-run thresholds are triggered when 7-day rolling sum of loss exceeds the daily threshold based on historic proportion of winter-run present in the delta.*All or a portion of Winter-run loss has not been genetically confirmed',
               align_with_table = FALSE)
 weekly_table
-
-#weekly steelhead thresholds for the entire water year
-SH_weekly_WY <- data.frame(Date = seq(as.Date('2024-12-01'), as.Date(Sys.Date()), 1)) %>%
-  left_join(salvage, by = 'Date') %>%
-  replace(is.na(.), 0) %>%
-  mutate(sum_7D_loss = rollsum(loss, k = 7, fill = NA, align = 'right')) %>%
-  mutate(triggered = if_else(sum_7D_loss < 120, 'No', 'Yes'))
 
 ############cumulative loss of steelhead and winter-run
 temp_wr <- salmon_raw %>%
@@ -365,4 +372,5 @@ combined_graph <- loss_graph / wr_hatch_cumul_graph +
 ggsave(plot = loss_graph, file = paste0('outputs/natural_loss_summary_',Sys.Date(),'.png'), width = 9, height = 6)
 ggsave(wr_hatch_cumul_graph, file = paste0('outputs/hatchery_loss_summary_',Sys.Date(),'.png'), width = 9, height = 6)
 ggsave(combined_graph, file = paste0('outputs/all_loss_summary_',Sys.Date(),'.png'), width = 9, height = 6)
+ggsave(sh_loss_graph, file = paste0('outputs/sh_loss_summary_',Sys.Date(),'.png'), width = 9, height = 6)
 save_as_docx(weekly_table, loss_graph, path = paste0('outputs/salvage-summary_',Sys.Date(),'.docx'))
