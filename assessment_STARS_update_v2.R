@@ -12,6 +12,10 @@ library(patchwork)
 runs <- c('WR', 'LF')
 year <- year(Sys.Date())
 
+# Get a list of all files that start with "Data.WR" for winter-run or "Data.LF" for late-fall run
+file_list <- list.files(pattern = "^Data\\.WR.*\\.csv$", full.names = TRUE)
+
+
 #renaming files to include date at the beginning for easier filtering
 files <- list.files(path = 'StarsFiles/', pattern = '^Data.*\\.csv$', ignore.case = TRUE)
 
