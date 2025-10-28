@@ -101,7 +101,7 @@ genetic_wr <- bind_rows(read.csv('CodeFiles/CVP_genetics.csv'), read.csv('CodeFi
   mutate(shortDate = format(Date, "%b %d")) %>%
   filter(wday >= wday(Sys.Date()))
 
-realtime_wr <- data.frame(Date = seq(as.Date('2024-11-01'), Sys.Date(), 1)) %>%
+realtime_wr <- data.frame(Date = seq(as.Date('2025-10-21'), Sys.Date(), 1)) %>%
   left_join(select(salmon_raw, Date, CATCH)) %>%
   replace(is.na(.), 0) %>%
   mutate(cumul = cumsum(CATCH)) %>%
@@ -136,7 +136,7 @@ steelhead_raw <- read_csv(max(file_names[grep('steelhead', file_names, ignore.ca
   mutate(Date = mdy(Date)) %>%
   mutate(facility = if_else(facility == 'Loss_SWPN', 'SWP', 'CVP'))
 
-realtime_sh <- data.frame(Date = seq(as.Date('2024-11-01'), Sys.Date(), 1)) %>%
+realtime_sh <- data.frame(Date = seq(as.Date('2025-10-21'), Sys.Date(), 1)) %>%
   left_join(select(steelhead_raw, Date, loss)) %>%
   replace(is.na(.), 0) %>%
   mutate(cumul = cumsum(loss)) %>%
